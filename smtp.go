@@ -17,7 +17,10 @@ import (
 	"io"
 	"net"
 	"net/textproto"
+	"net/url"
 	"strings"
+
+	"golang.org/x/net/proxy"
 )
 
 // A Client represents a client connection to an SMTP server.
@@ -47,6 +50,21 @@ func Dial(addr string) (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
+	host, _, _ := net.SplitHostPort(addr)
+	return NewClient(conn, host)
+}
+
+func DialWithProxy(addr string, socks5_proxy_url *url.URL) (*Client, error) {
+	dialer, err := proxy.FromURL(socks5_proxy_url, proxy.Direct)
+	if err != nil {
+		return nil, err
+	}
+
+	conn, err := dialer.Dial("tcp", addr)
+	if err != nil {
+		return nil, err
+	}
+
 	host, _, _ := net.SplitHostPort(addr)
 	return NewClient(conn, host)
 }
